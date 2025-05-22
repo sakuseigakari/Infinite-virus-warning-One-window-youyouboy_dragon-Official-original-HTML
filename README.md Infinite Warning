@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【ドッキリ】システム異常警告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+        .description {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: #4b5563;
+        }
+        .button {
+            padding: 12px 24px;
+            background-color: #f87171;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover {
+            background-color: #ef4444;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .button:active {
+            background-color: #dc2626;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .dynamic-popup {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 0.25rem;
+            padding: 15px;
+            text-align: center;
+            width: 300px;
+            z-index: 999;
+            transition: opacity 0.3s ease-out;
+        }
+        .dynamic-popup-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        .dynamic-popup-content {
+            font-size: 0.8rem;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .dynamic-popup-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 0.125rem;
+            background-color: #e5e7eb;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+        }
+        .dynamic-popup-button:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* GitHubのUIバー（黒帯）を非表示にする対策 */
+        html body > iframe[style*="visibility: visible"] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container">
+        <h1 class="title">【ドッキリ】システム異常警告</h1>
+        <p class="description">
+            このサイトは、システムに異常が発生したかのような警告を大量に表示します。<br>
+            ブラウザを閉じても警告が表示されるように見えますが、実際には閉じることができます。
+        </p>
+        <button id="start-loop" class="button">警告を開始する</button>
+    </div>
+
+    <script>
+        const startLoopButton = document.getElementById('start-loop');
+        let popupTimeoutId;
+        let popupCount = 0;
+
+        const synth = new Tone.MembraneSynth().toDestination();
+
+        function createAndShowPopup() {
+            const popup = document.createElement('div');
+            popup.className = 'dynamic-popup';
+
+            popup.innerHTML = `
+                <h2 class="dynamic-popup-title">セキュリティ警告</h2>
+                <p class="dynamic-popup-content">
+                    お使いのシステムで異常が検出されました。<br>
+                    ただちに、詳細を確認してください。
+                </p>
+                <button class="dynamic-popup-button">OK</button>
+            `;
+
+            const maxX = window.innerWidth - 320;
+            const maxY = window.innerHeight - 200;
+            popup.style.left = `${Math.random() * maxX}px`;
+            popup.style.top = `${Math.random() * maxY}px`;
+
+            document.body.appendChild(popup);
+            popupCount++;
+
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+            synth.triggerAttackRelease('C4', '8n');
+
+            popup.querySelector('.dynamic-popup-button').addEventListener('click', () => {
+                popup.style.opacity = '0';
+                setTimeout(() => {
+                    popup.remove();
+                    popupCount--;
+                }, 50);
+            });
+
+            scheduleNextPopup();
+        }
+
+        function scheduleNextPopup() {
+            const minDelay = 200;
+            const maxDelay = 800;
+            const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay;
+
+            popupTimeoutId = setTimeout(() => {
+                createAndShowPopup();
+            }, randomDelay);
+        }
+
+        startLoopButton.addEventListener('click', () => {
+            startLoopButton.disabled = true;
+            startLoopButton.textContent = '警告を生成中...';
+            createAndShowPopup();
+        });
+
+        window.addEventListener('beforeunload', (event) => {
+            event.preventDefault();
+            event.returnValue = '本当にこのページを閉じますか？システムが危険な状態です！';
+        });
+    </script>
+</body>
+</html>
